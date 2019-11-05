@@ -13,7 +13,7 @@ npm start
 ## Running with Docker
 ```
 docker build -t bdt .
-docker run -p 4500:4500 bdt npm start
+docker run -p 4500:4500 bdt
 ```
 
 ## Accessing the API
