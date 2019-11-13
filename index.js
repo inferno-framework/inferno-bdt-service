@@ -4,7 +4,7 @@ const app = express()
 const port = 4500
 const path = '/api/tests'
 
-const config = require('./config')
+// const config = require('./config')
 
 app.use(express.json());
 
@@ -25,12 +25,14 @@ app.get(path, (req, res) => {
 app.post(path, (req, res) => {
 
   // 1. Create a runner with the given settings
-  let runner = new bdt.Runner(config);
+  let runner = new bdt.Runner(req.body.settings);
+
+  console.log(req.body.settings)
 
   function writeEvent(data) {
     try {
       let stringData = JSON.stringify(data);
-      console.log(data.type);
+      console.log(data);
       res.write(`${stringData}\n`);
     } catch (ex) {
       console.error("writeEvent: ", ex);
