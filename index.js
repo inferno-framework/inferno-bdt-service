@@ -1,35 +1,36 @@
 const express = require('express')
 const bdt = require("bdt/bdt")
 const app = express()
-const serverKeys = require('./jwks').keys
+const port = 4500
+const path = '/api/tests'
 
-const PORT = 4500
-const API_PATH = '/api/tests'
-const JWKS_PATH = '/jwks'
-const JWKS_URL_TIMEOUT = 500;
+const config = require('./config')
 
 app.use(express.json());
-app.use(express.urlencoded({ extended: false }))
-app.use((req, res, next) => {
-  console.log(`REQUEST: ${req.method} ${req.url}`);
-  next();
-})
 
+// const reporter = require("./res-stream")
+
+// 2. Create and attach a reporter
+// const reporter = require("./res-stream")();
+// reporter.attach(runner);
+
+// 3. Load tests
 bdt.load('./node_modules/bdt/testSuite/**/*.test.js');
 
-app.get(API_PATH, (req, res) => {
+app.get(path, (req, res) => {
   res.setHeader('Content-Type', 'application/json');
   res.end(JSON.stringify(bdt.getPath()));
 })
 
-app.post(API_PATH, (req, res) => {
+app.post(path, (req, res) => {
 
-  let runner = new bdt.Runner(req.body.settings);
+  // 1. Create a runner with the given settings
+  let runner = new bdt.Runner(config);
 
   function writeEvent(data) {
     try {
       let stringData = JSON.stringify(data);
-      console.log(`TEST EVENT: ${data.type}`);
+      console.log(data.type);
       res.write(`${stringData}\n`);
     } catch (ex) {
       console.error("writeEvent: ", ex);
@@ -63,7 +64,7 @@ app.post(API_PATH, (req, res) => {
   runner.on("testEnd"   , onTestEnd   );
 
   function onTestEnd(data) {
-    // If only one test is called it seems like it doesn't ever reach test end
+    // If only one group is called it seems like it doesn't ever reach test end
     writeEvent({ type: "testEnd", data });
     runner.removeAllListeners();
     res.end();
@@ -75,36 +76,8 @@ app.post(API_PATH, (req, res) => {
     res.end();
   }
 
-
-
   runner.run(bdt.getPath(req.body.path))
 })
 
-let currentKeys = {keys: serverKeys},
-    currentKeyTimeout = 0;
-
-const replaceKeys = (keys) => {
-  console.log(`KEYSETS: Setting keyset (${keys.length} keys)`);
-  currentKeys = JSON.parse(JSON.stringify({keys: keys}));
-}
-
-
-app.get(JWKS_PATH, (req, res) => {
-  res.setHeader('Content-Type', 'application/json');
-  res.write(JSON.stringify(currentKeys))
-  res.end();
-})
-
-app.post(`${JWKS_PATH}/override`, (req, res) => {
-  replaceKeys([JSON.parse(req.body.publicKey)]);
-  console.log(JSON.parse(req.body.publicKey).kid)
-  currentKeyTimeout = setTimeout(() => {
-    clearTimeout(currentKeyTimeout)
-    replaceKeys(serverKeys);
-  }, JWKS_URL_TIMEOUT)
-  res.end();
-  
-})
-
-app.listen(PORT, () => console.log(`BDT Service API listening on port ${PORT}!`))
+app.listen(port, () => console.log(`BDT Service API listening on port ${port}!`))
 
