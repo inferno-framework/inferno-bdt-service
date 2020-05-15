@@ -25,7 +25,7 @@ app.get(path, (req, res) => {
 app.post(path, (req, res) => {
 
   // 1. Create a runner with the given settings
-  let runner = new bdt.Runner(config);
+  let runner = new bdt.Runner(req.body.settings);
 
   function writeEvent(data) {
     try {
