@@ -10,7 +10,7 @@
   "author": "",
   "license": "Apache-2.0",
   "dependencies": {
-    "express": "^4.16.4",
+    "express": "^4.18.2",
     "bdt": "https://github.com/smart-on-fhir/bdt.git"
   }
 }
